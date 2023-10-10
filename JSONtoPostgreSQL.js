@@ -23,6 +23,7 @@
   Read - artilce to learn more about environment variables - https://medium.com/the-node-js-collection/making-your-node-js-work-everywhere-with-environment-variables-2da8cdf6e786
 */
 //ADD CODE HERE to connect to you database
+const sequelize = new Sequelize(process.env.API_URL);
 
 //Testing that the .env file is working - This should print out the port number
 console.log(process.env.PORT); //Should print out 8080 
@@ -43,12 +44,29 @@ console.log(process.env.API_Key); //Should print out "Key Not set - starter code
     if (err) throw err;
     console.log(data);
 
+    
+
     //Save and parse the data from the listings.json file into a variable, so that we can iterate through each instance - Similar to Bootcamp#1
    //ADD CODE HERE
+   const listingData = JSON.parse(data).entries;
+   
   
      //Use Sequelize create a new row in our database for each entry in our listings.json file using the Listing model we created in ListingModel.js
     // to https://sequelize.org/docs/v6/core-concepts/model-instances/#creating-an-instance
      //ADD CODE HERE
+     listingData.forEach(listing => {
+      Listing.create({
+        code: listing.code,
+        name: listing.name,
+        latitude: listing.coordinates ? listing.coordinates.latitude : null,
+        longitude: listing.coordinates ? listing.coordinates.longitude : null,
+        address: listing.address || null
+      }).then(() => {
+        console.log('Listing saved to database');
+      }).catch(error => {
+        console.error('Error saving listing to database:', error);
+      });
+    });
 
     });
 } catch (error) {
