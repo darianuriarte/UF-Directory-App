@@ -7,6 +7,7 @@ import { Sequelize, Model, DataTypes,  QueryTypes, sql } from '@sequelize/core';
   import { Listing } from './ListingModel.js';
 /* Connect to your database */
 //ADD CODE HERE to connect to you database - same code you put for JSONtoPostgreSQL.js and ListingModel.js
+const sequelize = new Sequelize(process.env.API_URL)
 
 /*There are many ways to make aynchronous calls in Javascript: Promises, callbacks, Asyc/Await - https://www.geeksforgeeks.org/difference-between-promise-and-async-await-in-node-js/
   Best Practice: A current practice is to use Async Await.  
@@ -53,6 +54,12 @@ try {
       async function retrieveAllListings() {
           //ADD CODE HERE
           console.log('Retrieving all listings');
+          try {
+            const listings = await Listing.findAll();
+            console.log('All listings:', JSON.stringify(listings, null, 2));
+        } catch (error) {
+            console.error('Error retrieving all listings:', error);
+        }
       }
     /* 
     Find the document that contains data corresponding to Library West, then log it to the console. 
@@ -60,7 +67,17 @@ try {
    */
     async function findLibraryWest() {
        //ADD CODE HERE
-      console.log('Finding Library West');
+       console.log('Finding Library West');
+       try {
+        const libraryWest = await Listing.findOne({
+            where: {
+                name: 'Library West'
+            }
+        });
+        console.log('Library West:', JSON.stringify(libraryWest, null, 2));
+    } catch (error) {
+        console.error('Error finding Library West:', error);
+    }
 
     }
 
@@ -73,7 +90,22 @@ try {
     */
       async function removeCable() {
          //ADD CODE HERE
-        console.log('Removing Cable BLDG');
+         console.log('Removing Cable BLDG');
+         try {
+          const cableListing = await Listing.findOne({
+              where: {
+                  code: 'CABL'
+              }
+          });
+          if (cableListing) {
+              await cableListing.destroy();
+              console.log('Cable Listing removed:', JSON.stringify(cableListing, null, 2));
+          } else {
+              console.log('Cable Listing not found.');
+          }
+      } catch (error) {
+          console.error('Error removing Cable Listing:', error);
+      }
     }
 
     /*
@@ -81,31 +113,62 @@ try {
       Learn more about the finder methods available to sequelize models - https://sequelize.org/docs/v6/core-concepts/model-querying-finders/
     */
     async function addDSIT() {
-       //ADD CODE HERE
       console.log('Adding the new DSIT BLDG that will be across from Reitz union. Bye Bye CSE, Hub, and French Fries.');
+      try {
+        const dsitBuilding = await Listing.create({
+            code: 'DSIT',
+            name: 'Data Science and IT Building',
+            // include other attributes as per your model
+        });
+        console.log('Added DSIT Building:', JSON.stringify(dsitBuilding, null, 2));
+    } catch (error) {
+        console.error('Error adding DSIT Building:', error);
+    }
     }
    
 
     /*
-      Phelps Memorial Hospital Center's address is incorrect.
+      PThe Phelps Lab's address is incorrect.
       Find the listing, update it with the correct address (Google address), and then log the updated listing in the database and use console.log to inspect it.
       Learn more about the finder methods available to sequelize models - https://sequelize.org/docs/v6/core-concepts/model-querying-finders/ 
     */
     async function updatePhelpsLab() {
        //ADD CODE HERE
        console.log('UpdatingPhelpsLab.');
+       try {
+        const phelpsLab = await Listing.findOne({
+            where: {
+                name: 'Phelps Laboratory'
+            }
+        });
+        if (phelpsLab) {
+            phelpsLab.address = '1953 Museum Rd, Gainesville, FL 32603'; // Update with the new address
+            await phelpsLab.save();
+            console.log('Updated Phelps Lab:', JSON.stringify(phelpsLab, null, 2));
+        } else {
+            console.log('Phelps Lab not found.');
+        }
+    } catch (error) {
+        console.error('Error updating Phelps Lab:', error);
+    }
  
     }
-
     
    console.log("Use these calls to test that your functions work. Use console.log statements in each so you can look at the terminal window to see what is executing. Also check the database.")
    //Calling all the functions to test them
-   retrieveAllListings() 
-   removeCable(); 
-   addDSIT();
-   updatePhelpsLab();
-   findLibraryWest();
-       
+   async function main() {
+    try {
+      await retrieveAllListings();
+      await removeCable();
+      await addDSIT();
+      await updatePhelpsLab();
+      await findLibraryWest();
+    } catch (error) {
+      console.error('Error executing functions:', error);
+    } finally {
+      await sequelize.close();
+    }
+  }
   
-
-
+  // Call the main function
+  main();
